@@ -18,6 +18,9 @@ Following are some of the assumptions the project makes about your backup:
   - Notes (comments)
   - Attachments
 
+## Limitations
+All issues, notes, and uploads are posted by a single user. This is because of limitations with GitLab API. As a workaround, the project will add annotations in descriptions of notes and issues, so original poster can be identified.
+
 ## Dependencies
 1. Node
 2. NPM
