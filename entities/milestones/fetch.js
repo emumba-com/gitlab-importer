@@ -1,4 +1,4 @@
-import { getReq } from '../../utils'
+import { getReqGP } from '../../utils'
 import { URL_MILESTONES } from '../../constants'
 
-export default () => getReq(URL_MILESTONES)
+export default () => getReqGP(URL_MILESTONES)

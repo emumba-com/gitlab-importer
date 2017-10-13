@@ -1,6 +1,7 @@
 // libs
 import fs from 'fs'
 import request from 'request-promise-native'
+import R from 'ramda'
 
 // src
 import conf from '../configuration'
@@ -57,9 +58,51 @@ export const postReq = async (pUri, body) => {
     return res.body
 }
 
-export const getReq = async (pUri, qs) => {
+export const putReq = async (pUri, body) => {
     const uri = makeURL(pUri)
-    logger.append(`Sending GET request to: ${uri}`)
+    logger.append(`Sending PUT request to: ${uri}`)
+    // logger.append(body)
+
+    const res = await request({
+        uri,
+        method: 'PUT',
+        headers: {
+            'PRIVATE-TOKEN': conf.target.privateToken
+        },
+        body,
+        json: true,
+        resolveWithFullResponse: true
+    })
+
+    // logger.append(res)
+
+    return res.body
+}
+
+export const deleteReq = async (pUri, body) => {
+    const uri = makeURL(pUri)
+    logger.append(`Sending DELETE request to: ${uri}`)
+    // logger.append(body)
+
+    const res = await request({
+        uri,
+        method: 'DELETE',
+        headers: {
+            'PRIVATE-TOKEN': conf.target.privateToken
+        },
+        body,
+        json: true,
+        resolveWithFullResponse: true
+    })
+
+    // logger.append(res)
+
+    return res.body
+}
+
+const __getReq__ = async (pUri, qs) => {
+    const uri = makeURL(pUri)
+    // logger.append(`Sending GET request to: ${uri}`)
 
     const res = await request({
         uri,
@@ -67,11 +110,59 @@ export const getReq = async (pUri, qs) => {
         headers: {
             'PRIVATE-TOKEN': conf.target.privateToken
         },
-        json: true
+        json: true,
+        resolveWithFullResponse: true
     })
 
     return res
 }
+
+export const getReq = async (pUri, qs) => {
+    const response = await __getReq__(pUri, qs)
+
+    if ( !response.body ) {
+        throw `[utils/getReq] Response doesn't have a body`
+    }
+
+    return response.body
+}
+
+export const getReqGP = async (uri, externalOptions = {}) => {
+    const options = {
+        page: 1,
+        per_page: 10,
+        ...externalOptions
+    }
+
+    let output = []
+
+    // dupchecks
+    // const map = {}
+
+    // let response
+    let page = options.page
+    let statusCode = 200
+    let body
+
+    const line = logger.append(`[utils/getReqGP][GET] ${uri} / page=${page} / output.length=${output.length}`)
+
+    do {
+        const response = await __getReq__(uri, { ...options, page })
+        statusCode = response.statusCode
+        body = response.body
+
+        if ( body ) {
+            output = output.concat(body)
+        }
+
+        line.update(`[utils/getReqGP][GET] ${uri} / page=${page} / output.length=${output.length}`)
+
+        page++
+    } while ( body && body.length )
+
+    return output
+}
+
 
 /**
  * copied from here: https://stackoverflow.com/a/41115086/162461
@@ -93,3 +184,52 @@ export const serial = funcs =>
 export const debugPipeline = args => {
     logger.append(`debugPipeline: ${JSON.stringify(args)}`)
 }
+
+const resolveFieldValue = (helpers, entityKey, fieldKey, sourceItem) => {
+    const resolver = conf.source[entityKey].fields[fieldKey]
+    const resolverType = R.type(resolver)
+    // logger.append(`entityKey: ${entityKey}, fieldKey: ${fieldKey}, resolverType: ${resolverType}`)
+
+    if ( resolverType === 'String' ) {
+        return sourceItem[resolver]
+    }
+
+    if ( resolverType !== 'Function' ) {
+        return null
+    }
+
+    return resolver({ ...helpers, sourceItem })
+}
+
+export const buildTargetObject = (helpers, entityKey, targetFields, sourceItem) =>
+    R.reduce((output, fieldKey) => {
+            output[fieldKey] = resolveFieldValue(helpers, entityKey, fieldKey, sourceItem)
+            return output
+        }, {
+            id: conf.target.project_id
+        }, targetFields
+    )
+
+// returns arrayB - arrayA
+// removing items that are present in targetItems
+export const filterByField = (fieldKey, arrayA, arrayB) => {
+    writeFile('/Users/umar/Desktop/arrayA.json', JSON.stringify(arrayA))
+    writeFile('/Users/umar/Desktop/arrayB.json', JSON.stringify(arrayB))
+
+    return R.differenceWith((a, b) => {
+        
+        // const r = a[fieldKey].indexOf(b[fieldKey]) > 0 || b[fieldKey].indexOf(a[fieldKey]) > 0
+        const r = a[fieldKey] === b[fieldKey]
+
+        /*
+        if ( r ) {
+            
+        }
+        */
+        // logger.append(`[filterByField] comparison "${a[fieldKey]}" === "${b[fieldKey]}": ${r}`)
+
+        return r
+    }, arrayB, arrayA)
+}
+
+export const dedupe = propKey => R.uniqWith(R.eqBy(R.prop(propKey)))

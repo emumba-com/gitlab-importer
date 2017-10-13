@@ -5,6 +5,7 @@ import get from 'lodash/get'
 import conf from '../../configuration'
 import { logger } from '../../utils'
 
-export default ([backupJSON, localLables, remoteLabels]) => {
-    return [backupJSON, get(backupJSON, conf.source.labels.path, []), remoteLabels]
-}
+export default params => ({
+    sourceItems: get(params.source, conf.source.labels.path, []),
+    ...params
+})

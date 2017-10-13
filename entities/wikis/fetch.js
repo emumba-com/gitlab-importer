@@ -1,7 +1,7 @@
 import { getReq, logger } from '../../utils'
-import { URL_LABELS } from '../../constants'
+import { URL_WIKIS } from '../../constants'
 
 export default async () => {
-    const labels = await getReq(URL_LABELS)
+    const labels = await getReq(URL_WIKIS)
     return labels
 }

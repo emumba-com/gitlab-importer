@@ -3,7 +3,7 @@ import path from 'path'
 import get from 'lodash/get'
 
 // src
-import { readFile, logger, getRequestCount, getReq } from './utils'
+import { readFile, logger, getRequestCount, getReq, deleteReq } from './utils'
 import conf from './configuration'
 
 import createMilestones from './entities/milestones'
@@ -14,7 +14,23 @@ import createNotes from './entities/notes'
 import createUploads from './entities/uploads'
 import createWikis from './entities/wikis'
 
+import fetchIssues from './entities/issues/fetch'
+
+const clearIssues = async () => {
+    const line = logger.append(`Reading backup file ...`)
+
+    const issues = await fetchIssues()
+    
+    for ( let issue of issues ) {
+        line.update(`Deleting issue ${issue.iid}`)
+        await deleteReq(`/projects/${conf.target.project_id}/issues/${issue.iid}`)
+    }
+}
+
 (async () => {
+//    await clearIssues()
+//    return
+
     try {
         const startTimestamp = Date.now()
         const line = logger.append(`Reading backup file ...`)
@@ -23,20 +39,24 @@ import createWikis from './entities/wikis'
         line.update('Parsing backup data ...')
         const backupJSON = JSON.parse(backupString)
 
-        // line.update('Creating users ...')
-        // const users = await createUsers(backupJSON)
+        // get list of users that are engaged in this project
+        line.update('Fetching users ...')
+        const users = await createUsers(backupJSON)
 
+        // doesn't require users
         line.update('Creating milestones ...')
         const milestones = await createMilestones(backupJSON)
-        logger.append(`Total milestones: ${JSON.stringify(milestones)}`)
 
-        // line.update('Creating labels ...')
-        // const labels = await createLabels(backupJSON)
+        // doesn't require users
+        line.update('Creating labels ...')
+        const labels = await createLabels(backupJSON)
 
-        // logger.append(`Total Labels: ${JSON.stringify(labels)}`)
-        /*
+        // requires users
+        // assignee IDs
         line.update('Creating issues ...')
         const issues = await createIssues(backupJSON, users, milestones, labels)
+        
+        logger.append(`[index] Issues downloaded: ${issues && issues.length}`)
 
         line.update('Creating notes ...')
         const notes = await createNotes(backupJSON, users, issues)
@@ -49,10 +69,9 @@ import createWikis from './entities/wikis'
 
         const duration = (Date.now() - startTimestamp) / 1000
         line.update(`Project uploading completed in ${ duration } seconds and ${ getRequestCount() } requests`)
-        */
     } catch(e) {
-        logger.append(`An error occurred: `, e)
-        logger.append(e.stack)
+        console.log(`An error occurred: `, e)
+        console.log(e.stack)
     }
 })()
 

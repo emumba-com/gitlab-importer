@@ -10,7 +10,11 @@ import { debugPipeline, logger } from '../../utils'
 
 const create = R.pipe(parse, transform, write)
 
-export default async backupJSON => {
-    await create([backupJSON, null, await fetch()])
+export default async source => {
+    await create({
+        source,
+        remoteItems: await fetch()
+    })
+
     return await fetch()
 }

@@ -3,12 +3,12 @@ import R from 'ramda'
 
 // src
 import conf from '../../configuration'
-import { logger, getReq } from '../../utils'
+import { logger, getReq, filterByField, dedupe } from '../../utils'
 
 const { fields } = conf.source.labels
 
 // removes duplicate from source data
-const dedupe = R.uniqWith(R.eqBy(R.prop('id')))
+// const dedupe = R.uniqWith(R.eqBy(R.prop('id')))
 
 // transforms source data to gitlab format
 const transform = R.map(pLabel => ({
@@ -19,12 +19,12 @@ const transform = R.map(pLabel => ({
     priority: pLabel[fields.priority]
 }))
 
-export default ([backupJSON, localItems, remoteItems]) => {
-    const filterOutExistingByName = R.curry(R.differenceWith(R.eqBy(R.prop('name'))))(R.__, remoteItems)
+export default params => {
+    const { sourceItems, remoteItems } = params
+    const filterOutExistingByName =  R.curry(filterByField)('name', remoteItems)
 
-    return [
-        backupJSON,
-        R.pipe(dedupe, transform, filterOutExistingByName)(localItems),
-        remoteItems
-    ]
+    return {
+        localItems: R.pipe(dedupe('name'), transform, filterOutExistingByName)(sourceItems),
+        ...params
+    }
 }
