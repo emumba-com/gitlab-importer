@@ -5,7 +5,18 @@ A utility that migrates backups from [JIRA](https://www.atlassian.com/software/j
 GitLab doesn't have any data import utility. GitLab might make one someday, but till that time only thing you've is GitLab API.
 
 ## This Solution
-This solution leverages GitLab's API to migrate your data to a GitLab project. It's designed to be modular, extensible, and adaptable to different types of backup structures. It also takes files/attachments into account.
+This solution leverages GitLab's API to migrate your data to a GitLab project. It's designed to be modular, extensible, and adaptable to different types of backup structures. This project also takes files/attachments into account.
+
+## Assumptions
+Following are some of the assumptions the project makes about your backup:
+1. Your data is in one JSON file.
+2. All of your attachments/files are in one folder.
+3. The JSON structure contains arrays of following entities. Paths of those entities are configurable though.
+  - Issues
+  - Milestones
+  - Labels
+  - Notes (comments)
+  - Attachments
 
 ## Dependencies
 1. Node
