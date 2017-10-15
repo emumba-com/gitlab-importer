@@ -37,26 +37,40 @@ export const isJSON = str => {
 
 const makeURL = uri => `https://${conf.target.host}/api/${conf.target.version}${uri}`
 
-export const postReq = async (pUri, body) => {
+export const postReq = async (pUri, body, pOptions = {}) => {
     const uri = makeURL(pUri)
+    const options = {
+        uri,
+        method: 'POST',
+        body,
+        json: true,
+        resolveWithFullResponse: true,
+        headers: {},
+        ...pOptions
+    }
+
+    options.headers = {
+        ...options.headers,
+        'PRIVATE-TOKEN': conf.target.privateToken,
+    }
+
     logger.append(`Sending POST request to: ${uri}`)
     // logger.append(body)
 
-    const res = await request({
-        uri,
-        method: 'POST',
-        headers: {
-            'PRIVATE-TOKEN': conf.target.privateToken
-        },
-        body,
-        json: true,
-        resolveWithFullResponse: true
-    })
+    const res = await request(options)
 
     // logger.append(res)
 
     return res.body
 }
+
+export const uploadFile = async (uri, filepath) =>
+    postReq(uri, '', {
+        formData: {
+            file: fs.createReadStream(filepath)
+        },
+        json: false
+    })
 
 export const putReq = async (pUri, body) => {
     const uri = makeURL(pUri)
