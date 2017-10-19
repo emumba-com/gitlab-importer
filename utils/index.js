@@ -9,6 +9,8 @@ import logger from './logger'
 
 export { default as logger } from './logger'
 
+let requestCount = 0
+
 export const readFile = fileName =>
     new Promise((resolve, reject) => {
         fs.readFile(fileName, 'utf8', (err, data) => {
@@ -58,7 +60,7 @@ export const postReq = async (pUri, body, pOptions = {}) => {
     // logger.append(body)
 
     const res = await request(options)
-
+    requestCount++
     // logger.append(res)
 
     return res.body
@@ -88,6 +90,7 @@ export const putReq = async (pUri, body) => {
         resolveWithFullResponse: true
     })
 
+    requestCount++
     // logger.append(res)
 
     return res.body
@@ -109,6 +112,7 @@ export const deleteReq = async (pUri, body) => {
         resolveWithFullResponse: true
     })
 
+    requestCount++
     // logger.append(res)
 
     return res.body
@@ -127,6 +131,8 @@ const __getReq__ = async (pUri, qs) => {
         json: true,
         resolveWithFullResponse: true
     })
+
+    requestCount++
 
     return res
 }
@@ -247,3 +253,5 @@ export const filterByField = (fieldKey, arrayA, arrayB) => {
 }
 
 export const dedupe = propKey => R.uniqWith(R.eqBy(R.prop(propKey)))
+
+export const getRequestCount = () => requestCount

@@ -68,6 +68,7 @@ export const mapUploadFieldFile = ({ source, sourceItem, remoteIssues }) => {
 export const mapUploadFieldIssueID = ({ source, sourceItem, remoteIssues }) => {
     const { ticket_id } = sourceItem
     const issue = getRemoteEntity('issues', remoteIssues, 'title', source.tickets, 'summary', { id: ticket_id })
+    logger.append(`[mappers/assembla/mapUploadFieldIssueID] Found issues against ticket_id ${ticket_id}: ${JSON.stringify(issue)}`)
 
     return issue && issue.id
 }

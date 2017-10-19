@@ -2,7 +2,7 @@
 import R from 'ramda'
 
 // src
-import { resolveFieldValue, buildTargetObject, filterByField } from '../../utils'
+import { resolveFieldValue, buildTargetObject, filterByField, logger } from '../../utils'
 
 const targetFields = [
     'issue_iid',
@@ -23,10 +23,14 @@ export default params => {
     // assume that all of above helpers are already present in the params
     const helpers = { ...params }
     const transform = R.map(R.curry(buildTargetObject)(helpers, 'uploads', targetFields))
+    const removeOrphans = R.reject(R.propEq('issue_iid', null))
+    const localItems = R.pipe(transform, removeOrphans)(sourceItems)
+    logger.append(`[entities/uploads/transform] transformed: ${JSON.stringify(localItems)}`)
+
     // const filterOutExistingByContent = R.curry(filterByField)('body', remoteItems)
 
     return {
-        localItems: R.pipe(transform)(sourceItems),
+        localItems,
         ...params
     }
 }
