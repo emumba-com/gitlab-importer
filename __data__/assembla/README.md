@@ -1,0 +1,2 @@
+# Test Data for Assembla
+This directory contains test data, in the same structure as exported by [Assembla Exporter](https://github.com/emumba-com/assembla-exporter). The data is intended for writing test cases.
